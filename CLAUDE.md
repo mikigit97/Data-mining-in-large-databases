@@ -135,24 +135,12 @@ CREATE TABLE national_names (
     Count   INTEGER NOT NULL
 );
 
-CREATE TABLE state_names (
-    Id      INTEGER PRIMARY KEY,
-    Name    TEXT    NOT NULL,
-    Year    INTEGER NOT NULL,
-    Gender  TEXT    NOT NULL,
-    State   TEXT    NOT NULL,   -- 2-letter abbreviation, e.g. 'CA'
-    Count   INTEGER NOT NULL
-);
 ```
 
 **Indexes on `national_names`:**
 - `idx_nat_name` on `(Name)`
 - `idx_nat_year` on `(Year)`
 - `idx_nat_name_year` on `(Name, Year)` — composite/covering
-
-**Indexes on `state_names`:**
-- `idx_state_name` on `(Name)`
-- `idx_state_year` on `(Year)`
 
 ---
 

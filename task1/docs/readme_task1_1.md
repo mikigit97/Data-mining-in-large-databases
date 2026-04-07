@@ -4,17 +4,15 @@
 
 I built a reproducible data pipeline (Jupyter notebook `task1_baby_names.ipynb`) that:
 
-1. **Reads** two CSV files from the official US Social Security Administration baby-names dataset:
+1. **Reads** the official US Social Security Administration baby-names CSV:
    - `NationalNames.csv` (~1.8 million rows, aggregated US counts per name/year/gender)
-   - `StateNames.csv` (~5.6 million rows, same data broken down by US state)
 
-2. **Creates a SQLite database** (`baby_names.db`) with two tables — `national_names` and
-   `state_names` — whose schemas match the CSV columns exactly, with appropriate SQL types
-   for each column.
+2. **Creates a SQLite database** (`baby_names.db`) with one table — `national_names` —
+   whose schema matches the CSV columns exactly, with appropriate SQL types for each column.
 
 3. **Loads the data** in 50 000-row chunks using pandas `read_csv(chunksize=...)` and
    `DataFrame.to_sql(if_exists='append')`. Chunked loading keeps memory usage flat regardless
-   of file size, which matters for the 148 MB StateNames file.
+   of file size.
 
 4. **Creates indexes** and verifies their effectiveness via `EXPLAIN QUERY PLAN` and a
    timed benchmark that drops/restores the name index to measure the speedup directly.
@@ -37,17 +35,12 @@ disk after indexing), queries are local and fast, and there is no need for a ser
 
 ## Challenges & Solutions
 
-**1. Loading the 148 MB StateNames.csv without running out of memory**
-Reading the whole file into a DataFrame at once would use ~1 GB of RAM after type conversion.
-Solution: `pd.read_csv(chunksize=50_000)` streams the file in batches; each batch is inserted
-and then garbage-collected.
-
-**2. Slow bulk insert into SQLite**
+**1. Slow bulk insert into SQLite**
 Default SQLite settings issue an `fsync` after every transaction, making millions of inserts
 very slow. Solution: Set `PRAGMA synchronous = OFF` and `PRAGMA journal_mode = MEMORY`
-during the load, then restore safe defaults. This gave a ~10× speedup on the StateNames load.
+during the load, then restore safe defaults. This gave a ~10× speedup on the bulk load.
 
-**3. Ensuring the notebook is fully reproducible**
+**2. Ensuring the notebook is fully reproducible**
 If `baby_names.db` already existed from a previous run, re-running the notebook would
 duplicate rows. Solution: Delete the DB file at the start of the notebook before creating
 fresh tables.
