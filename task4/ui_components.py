@@ -1237,11 +1237,11 @@ def render_avatar(message: str) -> None:
                     #sq-detective-avatar {{
                         position: fixed;
                         bottom: 24px;
-                        left: 24px;
+                        right: 24px;
                         z-index: 999999;
                         display: flex;
                         flex-direction: column;
-                        align-items: flex-start;
+                        align-items: flex-end;
                         gap: 4px;
                         max-width: 290px;
                         pointer-events: none;
@@ -1255,7 +1255,7 @@ def render_avatar(message: str) -> None:
                     #sq-detective-avatar .det-bubble {{
                         background: #1e293b;
                         border: 2px solid #3b82f6;
-                        border-radius: 14px 14px 14px 2px;
+                        border-radius: 14px 14px 2px 14px;
                         padding: 10px 14px;
                         color: #e2e8f0;
                         font-size: 13px;
