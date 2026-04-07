@@ -1201,3 +1201,26 @@ def render_lock_panel(level_num: int) -> None:
         f'<div class="lock-panel">🔒 Complete Challenge {prev} to unlock this investigation.</div>',
         unsafe_allow_html=True,
     )
+
+
+def render_avatar(message: str) -> None:
+    """Render a fixed-position floating detective avatar with a speech bubble."""
+    if not message:
+        return
+    safe_msg = (
+        message
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&#39;")
+    )
+    st.markdown(
+        f"""
+        <div class="detective-float">
+          <div class="detective-bubble">{safe_msg}</div>
+          <div class="detective-emoji">🕵️</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )

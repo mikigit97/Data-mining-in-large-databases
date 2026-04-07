@@ -4,6 +4,7 @@ app4.py — SQL Detective Agency: Learn SQL by solving crime cases.
 Run:
     task2/.venv311/Scripts/streamlit run task4/app4.py
 """
+import random as _random
 import sys
 import uuid
 from pathlib import Path
@@ -26,6 +27,7 @@ from progress import (
 )
 from styles import CSS
 from ui_components import (
+    render_avatar,
     render_sidebar,
     render_level_header,
     render_story,
@@ -42,6 +44,55 @@ from ui_components import (
     render_sql_reference,
     render_challenge_visualization,
 )
+
+# ── Detective avatar messages ──────────────────────────────────────────────────
+
+_LEVEL_MSG = {
+    1: "Good work, {name}! Now we know all 25 suspects on file. The investigation begins!",
+    2: "Sharp eyes, {name}! Five suspects in Docklands — the net is closing.",
+    3: "Victor Crane tops the list, {name}! Keep your eyes on him.",
+    4: "Ten crimes in Docklands is no coincidence, {name}. Something big is happening there.",
+    5: "Physical evidence narrows it to four individuals, {name}. We're very close!",
+    6: "Outstanding work, {name}! The mastermind has been unmasked. Case closed!",
+}
+_BADGE_MSG = {
+    "first_blood": "Your first case closed, {name}! The Agency is proud.",
+    "clean_sweep": "No hints needed? Impressive work, {name}!",
+    "sharp_mind":  "First try! You have a sharp mind, {name}.",
+    "persistent":  "Persistence pays off, {name}. A true bulldog never gives up!",
+    "no_scaffold": "Wrote it from scratch? That's real detective-level SQL, {name}!",
+    "five_star":   "All five cases closed, {name}! You've earned the Chief Inspector rank.",
+    "mastermind":  "The mastermind unmasked! You're a legend in this Agency, {name}.",
+}
+_HINT_MSG = [
+    "Every detective needs a clue sometimes, {name}. Study it carefully.",
+    "One more hint, {name}. This should crack the case wide open.",
+]
+_CHIEF_ERROR_TEMPLATES = [
+    "Hold on, {name} — your query hit a syntax snag. {issue} Fix it and try again.",
+    "Easy, {name}. The database threw an error: {issue} Take another look.",
+    "We've seen this before, {name}. {issue} Adjust your query and resubmit.",
+]
+_CHIEF_WRONG_TEMPLATES = [
+    "Not quite, {name}. {issue} Study the case files again.",
+    "Close but no cigar, {name}. {issue} You've got the right idea — refine it.",
+    "The evidence doesn't add up, {name}. {issue} Try a different angle.",
+    "I've seen sharper detectives stumble here, {name}. {issue}",
+]
+
+
+def _dname() -> str:
+    n = st.session_state.get("detective_name", "") or ""
+    return f"Detective {n}" if n else "Detective"
+
+
+def _chief_says(issue: str, detective_name: str, is_error: bool) -> str:
+    _random.seed(issue[:20])
+    pool = _CHIEF_ERROR_TEMPLATES if is_error else _CHIEF_WRONG_TEMPLATES
+    msg = _random.choice(pool).format(name=detective_name, issue=issue)
+    _random.seed()
+    return msg
+
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -77,6 +128,10 @@ def _init_session_state():
         st.session_state.streak = 0
     if "prev_rank_pts" not in st.session_state:
         st.session_state.prev_rank_pts = st.session_state.points
+    if "detective_name" not in st.session_state:
+        st.session_state.detective_name = None
+    if "avatar_message" not in st.session_state:
+        st.session_state.avatar_message = ""
 
     for n in range(1, 7):
         for key in [f"query_input_{n}", f"last_error_{n}"]:
@@ -122,6 +177,33 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+# ── Name collection (shown only on very first visit) ──────────────────────────
+if st.session_state.detective_name is None:
+    st.markdown(
+        "<h2 style='text-align:center; color:#93c5fd;'>What's your name, Detective?</h2>",
+        unsafe_allow_html=True,
+    )
+    _, col, _ = st.columns([1, 2, 1])
+    name_input = col.text_input(
+        "Your name (optional)",
+        placeholder="e.g. Mike",
+        label_visibility="collapsed",
+    )
+    c1, c2 = col.columns(2)
+    if c1.button("▶ Start Investigation", type="primary", use_container_width=True):
+        st.session_state.detective_name = name_input.strip()
+        dn = _dname()
+        st.session_state.avatar_message = (
+            f"Welcome, {dn}! Your first case awaits. Study the suspects carefully."
+        )
+        st.rerun()
+    if c2.button("Skip", use_container_width=True):
+        st.session_state.detective_name = ""
+        st.session_state.avatar_message = "Welcome, Detective! Your first case awaits."
+        st.rerun()
+    render_avatar(st.session_state.avatar_message)
+    st.stop()
 
 # SQL reference always at the top
 render_sql_reference()
@@ -206,6 +288,8 @@ def _render_level(tab, level_num: int) -> None:
                 increment_hints(conn, sid, level_num)
                 if new_hint == 1:
                     st.session_state.streak = 0
+                hint_idx = min(new_hint - 1, 1)
+                st.session_state.avatar_message = _HINT_MSG[hint_idx].format(name=_dname())
             st.rerun()
 
         # ── Handle Run ─────────────────────────────────────────────────────────
@@ -250,6 +334,15 @@ def _render_level(tab, level_num: int) -> None:
                         st.balloons()
                     st.session_state.prev_rank_pts = st.session_state.points
 
+                    # Avatar: badge message takes priority over level message
+                    dn = _dname()
+                    if new_badges:
+                        st.session_state.avatar_message = _BADGE_MSG.get(
+                            new_badges[0], _LEVEL_MSG[level_num]
+                        ).format(name=dn)
+                    else:
+                        st.session_state.avatar_message = _LEVEL_MSG[level_num].format(name=dn)
+
                 elif is_correct and level_num in completed:
                     st.session_state[f"pts_just_earned_{level_num}"] = None
                     st.session_state[f"new_badges_{level_num}"] = []
@@ -264,6 +357,9 @@ def _render_level(tab, level_num: int) -> None:
                     if current_hint == 0:
                         st.session_state[f"hint_level_{level_num}"] = 1
                         increment_hints(conn, sid, level_num)
+                    # Avatar: explain the wrong answer in detective voice
+                    diag = st.session_state[f"diagnosis_{level_num}"]
+                    st.session_state.avatar_message = _chief_says(diag, _dname(), is_error=False)
             else:
                 # SQL error — auto-show hint 1 if not already shown
                 st.session_state[f"is_correct_{level_num}"] = None
@@ -272,6 +368,8 @@ def _render_level(tab, level_num: int) -> None:
                 if current_hint == 0:
                     st.session_state[f"hint_level_{level_num}"] = 1
                     increment_hints(conn, sid, level_num)
+                # Avatar: explain the SQL error in detective voice
+                st.session_state.avatar_message = _chief_says(error or "", _dname(), is_error=True)
 
             st.rerun()
 
@@ -301,3 +399,6 @@ for i, tab in enumerate(tabs):
         _render_level(tab, i + 1)
     else:
         _render_level(tab, 6)
+
+# ── Floating detective avatar (always rendered at page bottom) ─────────────────
+render_avatar(st.session_state.get("avatar_message", ""))
