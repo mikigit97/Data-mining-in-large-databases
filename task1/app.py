@@ -1,14 +1,58 @@
-import streamlit as st
 import sqlite3
+from pathlib import Path
+
 import pandas as pd
 import plotly.express as px
+import streamlit as st
 
-DB_PATH = "baby_names.db"
+_HERE = Path(__file__).parent
+_DB_PATH = _HERE / "baby_names.db"
+_CSV_PATH = _HERE / "us baby names" / "NationalNames.csv"
+
+
+def _bootstrap_db(conn: sqlite3.Connection) -> None:
+    """Create schema and load NationalNames.csv. Called only when DB is missing."""
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS national_names (
+            Id      INTEGER PRIMARY KEY,
+            Name    TEXT    NOT NULL,
+            Year    INTEGER NOT NULL,
+            Gender  TEXT    NOT NULL,
+            Count   INTEGER NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS state_names (
+            Id      INTEGER PRIMARY KEY,
+            Name    TEXT    NOT NULL,
+            Year    INTEGER NOT NULL,
+            Gender  TEXT    NOT NULL,
+            State   TEXT    NOT NULL,
+            Count   INTEGER NOT NULL
+        );
+        PRAGMA synchronous = OFF;
+        PRAGMA journal_mode = MEMORY;
+    """)
+    if _CSV_PATH.exists():
+        for chunk in pd.read_csv(str(_CSV_PATH), chunksize=50_000):
+            chunk.to_sql("national_names", conn, if_exists="append", index=False)
+    conn.executescript("""
+        CREATE INDEX IF NOT EXISTS idx_nat_name      ON national_names(Name);
+        CREATE INDEX IF NOT EXISTS idx_nat_year      ON national_names(Year);
+        CREATE INDEX IF NOT EXISTS idx_nat_name_year ON national_names(Name, Year);
+        PRAGMA synchronous = FULL;
+        PRAGMA journal_mode = DELETE;
+    """)
+    conn.commit()
+
 
 # ── Connection (cached so it's reused across reruns) ────────────────────────
 @st.cache_resource
 def get_conn():
-    return sqlite3.connect(DB_PATH, check_same_thread=False)
+    needs_seed = not _DB_PATH.exists()
+    conn = sqlite3.connect(str(_DB_PATH), check_same_thread=False)
+    if needs_seed:
+        with st.spinner("Building database from CSV — first launch only, ~30 seconds…"):
+            _bootstrap_db(conn)
+    return conn
 
 # ── Page config ─────────────────────────────────────────────────────────────
 st.set_page_config(
