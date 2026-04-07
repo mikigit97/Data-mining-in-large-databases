@@ -1243,25 +1243,26 @@ def render_avatar(message: str) -> None:
                         flex-direction: column;
                         align-items: flex-end;
                         gap: 4px;
-                        max-width: 290px;
+                        max-width: 380px;
                         pointer-events: none;
                         font-family: sans-serif;
                     }}
                     #sq-detective-avatar .det-emoji {{
-                        font-size: 52px;
+                        font-size: 80px;
                         line-height: 1;
                         filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
                     }}
                     #sq-detective-avatar .det-bubble {{
                         background: #1e293b;
                         border: 2px solid #3b82f6;
-                        border-radius: 14px 14px 2px 14px;
-                        padding: 10px 14px;
+                        border-radius: 18px 18px 2px 18px;
+                        padding: 14px 18px;
                         color: #e2e8f0;
-                        font-size: 13px;
-                        line-height: 1.5;
+                        font-size: 15px;
+                        line-height: 1.6;
                         box-shadow: 0 4px 20px rgba(0,0,0,0.5);
                         word-break: break-word;
+                        max-width: 340px;
                         animation: sq-bubble-pop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) both;
                     }}
                     @keyframes sq-bubble-pop {{
