@@ -20,14 +20,6 @@ def _bootstrap_db(conn: sqlite3.Connection) -> None:
             Gender  TEXT    NOT NULL,
             Count   INTEGER NOT NULL
         );
-        CREATE TABLE IF NOT EXISTS state_names (
-            Id      INTEGER PRIMARY KEY,
-            Name    TEXT    NOT NULL,
-            Year    INTEGER NOT NULL,
-            Gender  TEXT    NOT NULL,
-            State   TEXT    NOT NULL,
-            Count   INTEGER NOT NULL
-        );
         PRAGMA synchronous = OFF;
         PRAGMA journal_mode = MEMORY;
     """)
@@ -148,7 +140,7 @@ with tab2:
     st.subheader("Custom SQL Query Panel")
     st.markdown(
         "Run any **SELECT** query against the database. "
-        "Tables available: `national_names`, `state_names`."
+        "Tables available: `national_names`."
     )
 
     EXAMPLES = {
