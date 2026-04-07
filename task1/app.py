@@ -265,50 +265,60 @@ with tab2:
             st.dataframe(result_df, use_container_width=True)
 
         elif view == "Bar chart":
-            # X-axis: user picks any column except the Y measure
-            default_x = "Name" if "Name" in bar_x_options else bar_x_options[0]
-            x_col = st.selectbox("X-axis", bar_x_options,
-                                 index=bar_x_options.index(default_x), key="x_axis")
-
-            bar_df = result_df.copy()
-            # Cast time-dimension X to string → categorical axis (every tick shown)
-            if x_col.lower() in _time_dims:
-                bar_df[x_col] = bar_df[x_col].astype(str)
-
-            _time_col_in_result = next(
-                (c for c in bar_df.columns if c.lower() in _time_dims and c != x_col), None
-            )
-
-            if x_col == "Name" and _time_col_in_result:
-                # X=Name with a time column present: one bar per (Name, Decade) pair,
-                # grouped side-by-side so each decade is visually separate
-                bar_df[_time_col_in_result] = bar_df[_time_col_in_result].astype(str)
-                color_col = _time_col_in_result
-                bar_text = None
-                barmode = "group"
-            elif x_col.lower() in _time_dims:
-                # X=Decade/Year: single bar per time point, color by Name so bars
-                # belonging to the same name share the same color
-                bar_df[x_col] = bar_df[x_col].astype(str)
-                color_col = "Name" if has_name else ("Gender" if has_gender else None)
-                bar_text = "Name" if has_name else None
-                barmode = "relative"
+            # Special case: wide Male/Female columns → melt to grouped split bar
+            if {"Name", "Male", "Female"}.issubset(set(cols)):
+                bar_df = result_df[["Name", "Male", "Female"]].melt(
+                    id_vars="Name", var_name="Gender", value_name="Count"
+                )
+                fig = px.bar(
+                    bar_df, x="Name", y="Count", color="Gender",
+                    barmode="group",
+                    color_discrete_map={"Male": "steelblue", "Female": "hotpink"},
+                    labels={"Count": "Total births"},
+                )
+                x_vals = list(dict.fromkeys(bar_df["Name"].tolist()))
+                fig.update_xaxes(tickmode="array", tickvals=x_vals, ticktext=x_vals, tickangle=45)
+                st.plotly_chart(fig, use_container_width=True)
             else:
-                color_col = "Gender" if (has_gender and x_col != "Gender") else None
-                bar_text = None
-                barmode = "relative"
+                # X-axis: user picks any column except the Y measure
+                default_x = "Name" if "Name" in bar_x_options else bar_x_options[0]
+                x_col = st.selectbox("X-axis", bar_x_options,
+                                     index=bar_x_options.index(default_x), key="x_axis")
 
-            fig = px.bar(bar_df, x=x_col, y=y_col, color=color_col,
-                         text=bar_text, barmode=barmode, labels={y_col: y_col})
-            if bar_text:
-                fig.update_traces(textposition="outside", cliponaxis=False)
-            # Force every x value to appear as a tick (Plotly auto-skips by default)
-            x_vals = list(dict.fromkeys(bar_df[x_col].tolist()))  # unique, order-preserved
-            fig.update_xaxes(
-                tickmode="array", tickvals=x_vals, ticktext=x_vals,
-                 tickfont=dict(size=11),
-            )
-            st.plotly_chart(fig, use_container_width=True)
+                bar_df = result_df.copy()
+                # Cast time-dimension X to string → categorical axis (every tick shown)
+                if x_col.lower() in _time_dims:
+                    bar_df[x_col] = bar_df[x_col].astype(str)
+
+                _time_col_in_result = next(
+                    (c for c in bar_df.columns if c.lower() in _time_dims and c != x_col), None
+                )
+
+                if x_col == "Name" and _time_col_in_result:
+                    bar_df[_time_col_in_result] = bar_df[_time_col_in_result].astype(str)
+                    color_col = _time_col_in_result
+                    bar_text = None
+                    barmode = "group"
+                elif x_col.lower() in _time_dims:
+                    bar_df[x_col] = bar_df[x_col].astype(str)
+                    color_col = "Name" if has_name else ("Gender" if has_gender else None)
+                    bar_text = "Name" if has_name else None
+                    barmode = "relative"
+                else:
+                    color_col = "Gender" if (has_gender and x_col != "Gender") else None
+                    bar_text = None
+                    barmode = "relative"
+
+                fig = px.bar(bar_df, x=x_col, y=y_col, color=color_col,
+                             text=bar_text, barmode=barmode, labels={y_col: y_col})
+                if bar_text:
+                    fig.update_traces(textposition="outside", cliponaxis=False)
+                x_vals = list(dict.fromkeys(bar_df[x_col].tolist()))
+                fig.update_xaxes(
+                    tickmode="array", tickvals=x_vals, ticktext=x_vals,
+                    tickfont=dict(size=11),
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
         elif view == "Line chart":
             # X = Year (fixed), Y = measure (fixed)
