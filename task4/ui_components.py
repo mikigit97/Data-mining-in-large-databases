@@ -1204,23 +1204,83 @@ def render_lock_panel(level_num: int) -> None:
 
 
 def render_avatar(message: str) -> None:
-    """Render a fixed-position floating detective avatar with a speech bubble."""
-    if not message:
-        return
-    safe_msg = (
-        message
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace('"', "&quot;")
-        .replace("'", "&#39;")
-    )
-    st.markdown(
+    """Render a fixed-position floating detective avatar with a speech bubble.
+
+    Uses a zero-height components.html iframe whose script injects the avatar
+    directly into window.parent.document.body — necessary because Streamlit's
+    main container has overflow:auto which breaks position:fixed inside it.
+    """
+    import streamlit.components.v1 as components
+    import html as _html
+
+    safe_msg = _html.escape(message or "")
+
+    components.html(
         f"""
-        <div class="detective-float">
-          <div class="detective-bubble">{safe_msg}</div>
-          <div class="detective-emoji">🕵️</div>
-        </div>
+        <script>
+        (function() {{
+            var msg = {repr(safe_msg)};
+            var parentDoc = window.parent.document;
+
+            // Remove any previous avatar
+            var old = parentDoc.getElementById('sq-detective-avatar');
+            if (old) old.remove();
+
+            // No message — just clear and exit
+            if (!msg) return;
+
+            // Inject keyframe + avatar styles into parent <head> (once)
+            if (!parentDoc.getElementById('sq-avatar-style')) {{
+                var s = parentDoc.createElement('style');
+                s.id = 'sq-avatar-style';
+                s.textContent = `
+                    #sq-detective-avatar {{
+                        position: fixed;
+                        bottom: 24px;
+                        left: 24px;
+                        z-index: 999999;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 4px;
+                        max-width: 290px;
+                        pointer-events: none;
+                        font-family: sans-serif;
+                    }}
+                    #sq-detective-avatar .det-emoji {{
+                        font-size: 52px;
+                        line-height: 1;
+                        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+                    }}
+                    #sq-detective-avatar .det-bubble {{
+                        background: #1e293b;
+                        border: 2px solid #3b82f6;
+                        border-radius: 14px 14px 14px 2px;
+                        padding: 10px 14px;
+                        color: #e2e8f0;
+                        font-size: 13px;
+                        line-height: 1.5;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                        word-break: break-word;
+                        animation: sq-bubble-pop 0.35s cubic-bezier(0.175,0.885,0.32,1.275) both;
+                    }}
+                    @keyframes sq-bubble-pop {{
+                        from {{ transform: scale(0.6) translateY(12px); opacity: 0; }}
+                        to   {{ transform: scale(1)   translateY(0);    opacity: 1; }}
+                    }}
+                `;
+                parentDoc.head.appendChild(s);
+            }}
+
+            // Build avatar element
+            var wrap = parentDoc.createElement('div');
+            wrap.id = 'sq-detective-avatar';
+            wrap.innerHTML =
+                '<div class="det-bubble">' + msg + '</div>' +
+                '<div class="det-emoji">&#x1F575;&#xFE0F;</div>';
+            parentDoc.body.appendChild(wrap);
+        }})();
+        </script>
         """,
-        unsafe_allow_html=True,
+        height=0,
     )

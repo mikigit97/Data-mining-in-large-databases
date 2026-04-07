@@ -132,38 +132,4 @@ textarea[data-testid="stTextArea"] textarea {
     margin: 4px 0;
 }
 
-/* ── Floating detective avatar ── */
-.detective-float {
-    position: fixed;
-    bottom: 24px;
-    left: 24px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    max-width: 290px;
-    pointer-events: none;
-}
-.detective-emoji {
-    font-size: 52px;
-    line-height: 1;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
-}
-.detective-bubble {
-    background: #1e293b;
-    border: 2px solid #3b82f6;
-    border-radius: 14px 14px 14px 2px;
-    padding: 10px 14px;
-    color: #e2e8f0;
-    font-size: 13px;
-    line-height: 1.5;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    animation: bubble-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-    word-break: break-word;
-}
-@keyframes bubble-pop {
-    from { transform: scale(0.6) translateY(12px); opacity: 0; }
-    to   { transform: scale(1)   translateY(0);    opacity: 1; }
-}
 """
