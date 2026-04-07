@@ -344,7 +344,7 @@ def render_sort_preview(conn: sqlite3.Connection) -> None:
         with c1:
             st.caption("**Unsorted** (first 5 rows)")
             df_u = pd.read_sql_query(
-                "SELECT name, motive_score FROM suspects LIMIT 5", conn
+                "SELECT name, motive_score FROM suspects ORDER BY suspect_id % 7 LIMIT 5", conn
             )
             st.dataframe(df_u, hide_index=True, use_container_width=True)
         with c2:
