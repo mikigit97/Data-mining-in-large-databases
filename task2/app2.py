@@ -14,7 +14,7 @@ from pony.orm import (
 )
 
 st.set_page_config(
-    page_title="Oscar Actor Explorer",
+    page_title="Oscar Explorer",
     page_icon=":trophy:",
     layout="wide",
 )
@@ -447,7 +447,7 @@ def main():
             [_PLACEHOLDER] + QUICK_PICKS,
         )
         if quick_pick == _PLACEHOLDER:
-            st.markdown("## Oscar Actor Explorer")
+            st.markdown("## Oscar Explorer")
             st.write(
                 "Select a name from the dropdown to see nomination history, "
                 "Wikipedia biography, win statistics, and a comparison to category peers."
@@ -458,7 +458,7 @@ def main():
     else:  # Search by name
         query = st.sidebar.text_input("Name", placeholder="e.g. Meryl Streep")
         if not query.strip():
-            st.markdown("## Oscar Actor Explorer")
+            st.markdown("## Oscar Explorer")
             st.write(
                 "Type a name in the search box to see nomination history, "
                 "Wikipedia biography, win statistics, and a comparison to category peers."
