@@ -428,7 +428,7 @@ _PLACEHOLDER = "— choose a name —"
 
 
 def main():
-    st.sidebar.title("Oscar Actor Explorer")
+    st.sidebar.title("Oscar Explorer")
     st.sidebar.write(
         "Search for any Academy Award nominee — actor, director, composer, or studio."
     )
