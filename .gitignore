@@ -1,0 +1,38 @@
+# Virtual environments
+task2/.venv311/
+.venv/
+venv/
+env/
+
+# SQLite databases (too large for git; generated at runtime or locally)
+*.db
+
+# Large raw datasets
+task1/us baby names/
+task2/The Oscar Award/
+task3/Pokemon/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+
+# Kaggle credentials (security)
+kaggle.json
+
+# Claude / tool internals
+.claude/
+.playwright-mcp/
