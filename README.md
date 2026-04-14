@@ -1,5 +1,9 @@
 # Big Data — SQL & Data Engineering Projects
 
+Video explanation of repo + SQL Detective Agency app (fourth app): ## 🎥 Demo
+
+[![Watch the demo](https://img.youtube.com/vi/gog1xsfiFWo/0.jpg)](https://www.youtube.com/watch?v=gog1xsfiFWo)
+
 Four interactive data applications built with Python, SQLite, and Streamlit, covering
 data loading, ORM design, game development, and SQL education.
 
