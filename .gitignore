@@ -40,3 +40,4 @@ kaggle.json
 # Claude / tool internals
 .claude/
 .playwright-mcp/
+CLAUDE.md
